@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SFM-GNN+ | Real-Time APT Detection & Federated SOC Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header / Navbar -->
+    <header class="navbar">
+      <div class="logo-group">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="logo-title">SFM-GNN+ SOC</h1>
+          <p class="logo-subtitle">Secure Federated Multimodal GNN for Real-Time APT Detection</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <!-- Mode Switcher -->
+        <div class="mode-selector-group">
+          <label for="modeSelect" class="mode-label">Traffic Mode:</label>
+          <select id="modeSelect" class="mode-select">
+            <option value="live_system" selected>Live System (Your Real Windows PC)</option>
+            <option value="dataset_simulation">Dataset Simulation (Benchmark Replay)</option>
+          </select>
+        </div>
+
+        <div class="badge badge-gpu" id="deviceBadge">
+          <span class="status-dot green"></span>
+          <span id="deviceName">NVIDIA RTX 3050 6GB • Active</span>
+        </div>
+        <div class="badge badge-model">
+          <span>Model: <strong>HeteroGAT (92.6%)</strong></span>
+        </div>
+        <button id="streamToggleBtn" class="btn btn-primary">
+          <span class="btn-icon">⏸</span> Pause Stream
+        </button>
+      </div>
+    </header>
+
+    <!-- Top KPI Metrics -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-label">Total Flows Ingested</div>
+        <div class="metric-value" id="kpiTotal">0</div>
+        <div class="metric-sub" id="modeSubText">Live Windows host & socket telemetry</div>
+      </div>
+      <div class="metric-card alert-card">
+        <div class="metric-label">Confirmed APT Attacks</div>
+        <div class="metric-value text-danger" id="kpiAttacks">0</div>
+        <div class="metric-sub">SDN OpenFlow isolated</div>
+      </div>
+      <div class="metric-card warning-card">
+        <div class="metric-label">False Positives Suppressed</div>
+        <div class="metric-value text-warning" id="kpiSuppressed">0</div>
+        <div class="metric-sub">By 64-d Penultimate Check</div>
+      </div>
+      <div class="metric-card success-card">
+        <div class="metric-label">Clean Traffic Allowed</div>
+        <div class="metric-value text-success" id="kpiClean">0</div>
+        <div class="metric-sub">Normal enterprise baseline</div>
+      </div>
+    </section>
+
+    <!-- Main Workspace: 2-Column Split -->
+    <main class="main-grid">
+      <!-- Left Column: Graph Topology & XAI Attribution -->
+      <section class="panel graph-panel">
+        <div class="panel-header">
+          <div class="panel-title-group">
+            <h2 class="panel-title">Heterogeneous Threat Topology</h2>
+            <span class="panel-tag">Live Process • Active Socket • Target File • Network Flow</span>
+          </div>
+          <div class="legend">
+            <span class="legend-item"><span class="legend-dot" style="background:#38bdf8;"></span> Process</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#a855f7;"></span> Socket</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#94a3b8;"></span> File</span>
+            <span class="legend-item"><span class="legend-dot" style="background:#ef4444;"></span> Threat Flow</span>
+          </div>
+        </div>
+        
+        <div class="canvas-container">
+          <canvas id="threatGraphCanvas"></canvas>
+          <div class="canvas-overlay" id="graphOverlay">Awaiting live network stream...</div>
+        </div>
+
+        <!-- Explainable AI (XAI) Attribution Sub-panel -->
+        <div class="xai-container">
+          <div class="xai-header">
+            <h3>XAI Feature Attribution (GradientSHAP)</h3>
+            <span id="xaiTargetClass" class="text-muted">Awaiting threat detection...</span>
+          </div>
+          <div id="xaiBars" class="xai-bars">
+            <div class="empty-state">No active threat trigger. Features will appear when an attack is verified.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Real-Time Stream & Attack Testing -->
+      <section class="panel stream-panel">
+        <div class="panel-header">
+          <h2 class="panel-title">Real-Time Threat Feed</h2>
+          <span class="live-indicator"><span class="pulse-dot"></span> LIVE</span>
+        </div>
+
+        <div class="events-scroll" id="eventsContainer">
+          <!-- Live events will be prepended here -->
+        </div>
+
+        <!-- Manual Injection / Test Controls -->
+        <div class="inject-panel">
+          <div class="inject-header">
+            <h4>Live Attack Injection & Testing</h4>
+            <span class="text-muted">Inject realistic attack vectors into the GNN pipeline</span>
+          </div>
+          <div class="inject-buttons">
+            <button class="btn btn-attack" data-attack="ransomware">⚡ Inject Ransomware</button>
+            <button class="btn btn-attack" data-attack="backdoor">⚡ Inject Backdoor C2</button>
+            <button class="btn btn-attack" data-attack="scanning">⚡ Inject Port Scan</button>
+            <button class="btn btn-attack" data-attack="injection">⚡ Inject SQLi/Injection</button>
+            <button class="btn btn-clean" data-attack="Benign">✓ Inject Clean Traffic</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Module 3: Secure Federated Learning Console -->
+    <section class="panel fed-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Module 3: Secure Federated Learning (Blind SecAgg & ZK Verification)</h2>
+          <span class="panel-tag">Diffie-Hellman Zero-Sum Masking (Sum M_i = 0) • ZK Bounds Compliance</span>
+        </div>
+        <div class="fed-controls">
+          <button id="runFedRoundBtn" class="btn btn-primary">
+            🔄 Execute Federated Round
+          </button>
+          <button id="testPoisonDefenseBtn" class="btn btn-attack">
+            🛡️ Simulate Poison Attack (Test ZK Defense)
+          </button>
+        </div>
+      </div>
+
+      <div class="fed-grid">
+        <div class="fed-client-card" id="clientCard1">
+          <div class="fed-client-head">
+            <span class="client-id-badge">Node 1</span>
+            <strong>Enterprise Headquarters</strong>
+          </div>
+          <div class="fed-client-body">
+            <div>Public Key: <code id="pkNode1">Generating...</code></div>
+            <div>Gradient Norm: <span id="normNode1">--</span></div>
+            <div>ZK Proof: <span id="zkNode1" class="badge">Awaiting round</span></div>
+          </div>
+        </div>
+
+        <div class="fed-client-card" id="clientCard2">
+          <div class="fed-client-head">
+            <span class="client-id-badge">Node 2</span>
+            <strong>Cloud VPC Gateway</strong>
+          </div>
+          <div class="fed-client-body">
+            <div>Public Key: <code id="pkNode2">Generating...</code></div>
+            <div>Gradient Norm: <span id="normNode2">--</span></div>
+            <div>ZK Proof: <span id="zkNode2" class="badge">Awaiting round</span></div>
+          </div>
+        </div>
+
+        <div class="fed-client-card" id="clientCard3">
+          <div class="fed-client-head">
+            <span class="client-id-badge">Node 3</span>
+            <strong>Edge IoT Regional Branch</strong>
+          </div>
+          <div class="fed-client-body">
+            <div>Public Key: <code id="pkNode3">Generating...</code></div>
+            <div>Gradient Norm: <span id="normNode3">--</span></div>
+            <div>ZK Proof: <span id="zkNode3" class="badge">Awaiting round</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SecAgg Status Alert Box -->
+      <div class="secagg-status-box" id="secaggSummaryBox">
+        <div class="secagg-title">
+          <span>Blind Aggregator Status:</span>
+          <span id="secaggRoundText" class="text-muted">Round 0 completed</span>
+        </div>
+        <p id="secaggDetailText">
+          SecAgg pairwise noise terms cancel out mathematically: <code style="color:#38bdf8;">Sum(W_i + M_i) = Sum(W_i)</code>. The central aggregator server experiences <strong>ZERO plaintext model weight exposure</strong>.
+        </p>
+      </div>
+    </section>
+
+    <!-- Bottom Panel: Automated SDN Remediation & Quarantine Table -->
+    <section class="panel quarantine-panel">
+      <div class="panel-header">
+        <div class="panel-title-group">
+          <h2 class="panel-title">Automated SDN OpenFlow Mitigation & Host Containment</h2>
+          <span class="panel-tag">OpenFlow v1.3 Micro-segmentation & Process Isolation</span>
+        </div>
+        <div class="badge badge-danger">
+          <span id="quarantineCount">0</span> Active Quarantines
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Detected Threat</th>
+              <th>Confidence</th>
+              <th>Source IP</th>
+              <th>Target Port</th>
+              <th>Host PID / Process</th>
+              <th>OpenFlow Rule Executed</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="quarantineTableBody">
+            <tr>
+              <td colspan="8" class="text-center text-muted" style="padding: 24px;">No active network quarantines. System running clean.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>SFM-GNN+: Secure Federated Multimodal Graph Neural Network</span>
+      <span>Live System & Dataset Multi-Modal Pipeline (DARPA CADETS & NF-ToN-IoT-V2)</span>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
